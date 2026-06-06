@@ -1,0 +1,39 @@
+{{ template "header" . }}
+{{ template "navbar" . }}
+
+<main class="max-w-7xl mx-auto px-6 py-20 flex-grow">
+    <h1 class="text-3xl font-serif-luxury tracking-widest uppercase mb-12">Panel Administrator</h1>
+
+    <!-- Grid Statistik Bisnis (Metrics) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+        <!-- Kartu Metrik 1 -->
+        <div class="bg-white border border-[#E5E0D8] p-8">
+            <span class="text-[9px] uppercase tracking-[0.2em] font-semibold text-gray-400 block mb-2">Total Katalog</span>
+            <h3 class="text-4xl font-serif-luxury font-light text-[#1C1C1C]">{{ .productCount }} Items</h3>
+        </div>
+        <!-- Kartu Metrik 2 -->
+        <div class="bg-white border border-[#E5E0D8] p-8">
+            <span class="text-[9px] uppercase tracking-[0.2em] font-semibold text-gray-400 block mb-2">Total Transaksi</span>
+            <h3 class="text-4xl font-serif-luxury font-light text-[#1C1C1C]">{{ .orderCount }} Pesanan</h3>
+        </div>
+        <!-- Kartu Metrik 3 -->
+        <div class="bg-white border border-[#E5E0D8] p-8">
+            <span class="text-[9px] uppercase tracking-[0.2em] font-semibold text-gray-400 block mb-2">Estimasi Laba Kotor</span>
+            <h3 class="text-4xl font-serif-luxury font-light text-green-700">IDR {{ .revenue }}</h3>
+        </div>
+    </div>
+
+    <!-- Tombol Navigasi Kontrol Menu Admin -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <a href="/admin/products" class="group block border border-[#E5E0D8] bg-white p-10 hover:border-black transition-colors duration-500">
+            <h2 class="text-lg font-serif-luxury tracking-widest uppercase mb-3 group-hover:translate-x-2 transition-transform duration-500">Kelola Inventaris Produk &rarr;</h2>
+            <p class="text-xs text-gray-500 leading-relaxed tracking-wide">Tambahkan produk baru, daftarkan kategori baru, pantau stok sisa pakaian, dan perbarui rincian harga busana.</p>
+        </a>
+        <a href="/admin/orders" class="group block border border-[#E5E0D8] bg-white p-10 hover:border-black transition-colors duration-500">
+            <h2 class="text-lg font-serif-luxury tracking-widest uppercase mb-3 group-hover:translate-x-2 transition-transform duration-500">Kelola Transaksi Pesanan &rarr;</h2>
+            <p class="text-xs text-gray-500 leading-relaxed tracking-wide">Pantau status transaksi belanja pelanggan, perbarui pelacakan pengiriman barang secara real-time, dan cek alamat tujuan.</p>
+        </a>
+    </div>
+</main>
+
+{{ template "footer" . }}

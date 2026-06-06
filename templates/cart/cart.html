@@ -1,0 +1,119 @@
+{{ template "header" . }}
+{{ template "navbar" . }}
+
+<main class="max-w-7xl mx-auto px-6 py-20">
+    <h1 class="text-3xl font-serif-luxury tracking-widest uppercase mb-12">Tas Belanja Anda</h1>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-16">
+        <!-- Bagian Kiri: Daftar Pakaian di Keranjang -->
+        <div class="lg:col-span-2 space-y-8">
+            {{ range .items }}
+            <div id="item-row-{{ .ProductID }}" class="flex items-center justify-between border-b border-[#E5E0D8] pb-8 gap-6">
+                <!-- Info Pakaian -->
+                <div class="flex items-center space-x-6">
+                    <div class="w-20 h-24 bg-[#F4F1EA] overflow-hidden border border-[#E5E0D8]/40 flex-shrink-0">
+                        <img src="{{ .Product.ImageURL }}" class="w-full h-full object-cover" alt="{{ .Product.Name }}">
+                    </div>
+                    <div>
+                        <span class="text-[9px] uppercase tracking-widest font-semibold text-gray-400 mb-1 block">{{ .Product.Category.Name }}</span>
+                        <h2 class="text-sm font-serif-luxury tracking-wide mb-2">{{ .Product.Name }}</h2>
+                        <p class="text-xs font-semibold text-gray-700">IDR {{ .Product.Price }}</p>
+                    </div>
+                </div>
+
+                <!-- Selector Kuantitas & Hapus -->
+                <div class="flex items-center space-x-8">
+                    <div class="flex items-center border border-[#E5E0D8] bg-white">
+                        <button onclick="updateQty({{ .ProductID }}, {{ .Quantity }} - 1)" class="px-2 py-1 text-xs hover:bg-gray-100 transition-colors">-</button>
+                        <span class="px-3 text-xs">{{ .Quantity }}</span>
+                        <button onclick="updateQty({{ .ProductID }}, {{ .Quantity }} + 1)" class="px-2 py-1 text-xs hover:bg-gray-100 transition-colors">+</button>
+                    </div>
+
+                    <button onclick="removeItem({{ .ProductID }})" class="text-xs text-red-700 uppercase tracking-wider hover:underline transition-all">Hapus</button>
+                </div>
+            </div>
+            {{ else }}
+            <div class="text-center py-20">
+                <p class="text-gray-500 text-xs uppercase tracking-widest italic mb-8">Tas belanja Anda saat ini masih kosong.</p>
+                <a href="/" class="inline-block bg-[#1C1C1C] text-white text-[10px] uppercase tracking-[0.25em] font-medium px-8 py-4 hover:bg-gray-800 transition-colors">Kembali Berbelanja</a>
+            </div>
+            {{ end }}
+        </div>
+
+        <!-- Bagian Kanan: Ringkasan & Checkout -->
+        {{ if .items }}
+        <div class="bg-white border border-[#E5E0D8] p-8 h-fit">
+            <h2 class="text-lg font-serif-luxury tracking-widest uppercase mb-6">Ringkasan Belanja</h2>
+            
+            <div class="border-b border-[#E5E0D8] pb-6">
+                <div class="flex justify-between text-xs text-gray-500 uppercase tracking-wider">
+                    <span>Jumlah Barang</span>
+                    <span>{{ len .items }} Item</span>
+                </div>
+            </div>
+
+            <div class="pt-6 mb-8">
+                <div class="flex justify-between text-sm font-semibold tracking-widest text-[#1C1C1C]">
+                    <span>TOTAL TAGIHAN</span>
+                    <span id="cart-total">IDR Memuat...</span>
+                </div>
+            </div>
+
+            <a href="/checkout" class="block text-center bg-[#1C1C1C] text-white text-[10px] uppercase tracking-[0.25em] font-medium py-4 hover:bg-gray-800 transition-colors w-full">
+                Lanjutkan Ke Checkout
+            </a>
+        </div>
+        {{ end }}
+    </div>
+</main>
+
+<script>
+    // Menghitung Total Belanja Secara Dinamis di Sisi Client
+    function calculateTotal() {
+        let total = 0;
+        {{ range .items }}
+        total += {{ .Product.Price }} * {{ .Quantity }};
+        {{ end }}
+        const element = document.getElementById('cart-total');
+        if (element) {
+            element.innerText = "IDR " + total.toLocaleString('id-ID');
+        }
+    }
+
+    async function updateQty(productId, qty) {
+        try {
+            const response = await fetch('/api/cart', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ product_id: productId, quantity: qty })
+            });
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                const result = await response.json();
+                alert(result.message || "Gagal menyesuaikan jumlah barang.");
+            }
+        } catch (err) {
+            alert("Terjadi kegagalan koneksi.");
+        }
+    }
+
+    async function removeItem(productId) {
+        try {
+            const response = await fetch('/api/cart', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ product_id: productId })
+            });
+            if (response.ok) {
+                window.location.reload();
+            }
+        } catch (err) {
+            alert("Terjadi kegagalan koneksi.");
+        }
+    }
+
+    calculateTotal();
+</script>
+
+{{ template "footer" . }}

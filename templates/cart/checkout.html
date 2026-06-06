@@ -1,0 +1,87 @@
+{{ template "header" . }}
+{{ template "navbar" . }}
+
+<main class="max-w-7xl mx-auto px-6 py-20">
+    <h1 class="text-3xl font-serif-luxury tracking-widest uppercase mb-12">Penyelesaian Pesanan</h1>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-16">
+        <!-- Bagian Kiri: Form Alamat Pengiriman -->
+        <div class="lg:col-span-2 bg-white border border-[#E5E0D8] p-10">
+            <h2 class="text-lg font-serif-luxury tracking-widest uppercase mb-8">Informasi Pengiriman</h2>
+            
+            <form id="checkoutForm" class="space-y-6">
+                <div>
+                    <label class="block text-[9px] uppercase tracking-[0.2em] font-medium text-gray-500 mb-2">Alamat Lengkap Tujuan</label>
+                    <textarea id="address" required rows="4" placeholder="Tulis jalan, nomor rumah, RT/RW, kecamatan, kota, dan kode pos tujuan Anda..." class="w-full border border-[#E5E0D8] px-4 py-3 text-xs bg-[#FAF9F6] focus:outline-none focus:border-black transition-colors leading-relaxed"></textarea>
+                </div>
+
+                <button type="submit" class="w-full bg-[#1C1C1C] text-white text-[10px] uppercase tracking-[0.25em] font-medium py-4 hover:bg-gray-800 transition-colors">
+                    Konfirmasi Dan Selesaikan Pembelian
+                </button>
+            </form>
+
+            <div id="errorMsg" class="hidden mt-4 text-center text-[10px] uppercase tracking-wider p-3 bg-red-100 text-red-800 border border-red-200"></div>
+        </div>
+
+        <!-- Bagian Kanan: Ringkasan Tagihan -->
+        <div class="bg-white border border-[#E5E0D8] p-8 h-fit">
+            <h2 class="text-lg font-serif-luxury tracking-widest uppercase mb-6">Ringkasan Belanja</h2>
+            
+            <div class="border-b border-[#E5E0D8] pb-6 space-y-4 max-h-60 overflow-y-auto">
+                {{ range .items }}
+                <div class="flex justify-between items-center text-xs gap-4">
+                    <span class="text-gray-600 font-medium truncate">{{ .Product.Name }} (x{{ .Quantity }})</span>
+                    <span class="text-[#1C1C1C] font-semibold flex-shrink-0">IDR {{ .Product.Price }}</span>
+                </div>
+                {{ end }}
+            </div>
+
+            <div class="pt-6">
+                <div class="flex justify-between text-sm font-semibold tracking-widest text-[#1C1C1C]">
+                    <span>TOTAL YANG DIBAYAR</span>
+                    <span id="checkout-total">IDR Memuat...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    function setTotal() {
+        const element = document.getElementById('checkout-total');
+        if (element) {
+            element.innerText = "IDR " + ({{ .total }}).toLocaleString('id-ID');
+        }
+    }
+
+    document.getElementById('checkoutForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const address = document.getElementById('address').value;
+        const errorMsg = document.getElementById('errorMsg');
+
+        try {
+            const response = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ shipping_address: address })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                // Alihkan ke riwayat pesanan ketika checkout berhasil diselesaikan
+                window.location.href = "/orders";
+            } else {
+                errorMsg.innerText = result.message || "Gagal memproses pengiriman.";
+                errorMsg.classList.remove('hidden');
+            }
+        } catch (err) {
+            errorMsg.innerText = "Koneksi ke server bermasalah.";
+            errorMsg.classList.remove('hidden');
+        }
+    });
+
+    setTotal();
+</script>
+
+{{ template "footer" . }}

@@ -1,0 +1,65 @@
+{{ template "header" . }}
+{{ template "navbar" . }}
+
+<main class="flex-grow flex items-center justify-center py-20 px-6">
+    <div class="max-w-md w-full bg-white border border-[#E5E0D8] p-10">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-serif-luxury tracking-widest uppercase mb-2">Sign In</h1>
+            <p class="text-[10px] text-gray-400 uppercase tracking-widest">Silakan masuk menggunakan akun Anda</p>
+        </div>
+
+        <form id="loginForm" class="space-y-6">
+            <div>
+                <label class="block text-[9px] uppercase tracking-[0.2em] font-medium text-gray-500 mb-2">Alamat Email</label>
+                <input type="email" id="email" required class="w-full border border-[#E5E0D8] px-4 py-3 text-xs bg-[#FAF9F6] focus:outline-none focus:border-black transition-colors">
+            </div>
+
+            <div>
+                <label class="block text-[9px] uppercase tracking-[0.2em] font-medium text-gray-500 mb-2">Kata Sandi</label>
+                <input type="password" id="password" required class="w-full border border-[#E5E0D8] px-4 py-3 text-xs bg-[#FAF9F6] focus:outline-none focus:border-black transition-colors">
+            </div>
+
+            <button type="submit" class="w-full bg-[#1C1C1C] text-white text-[10px] uppercase tracking-[0.25em] font-medium py-4 hover:bg-gray-800 transition-colors">
+                Masuk ke Akun
+            </button>
+        </form>
+
+        <div id="errorMsg" class="hidden mt-4 text-center text-[10px] uppercase tracking-wider p-3 bg-red-100 text-red-800 border border-red-200"></div>
+
+        <div class="text-center mt-6 text-[10px] uppercase tracking-widest text-gray-500">
+            Belum terdaftar? <a href="/register" class="text-black font-semibold hover:underline">Buat Akun Baru</a>
+        </div>
+    </div>
+</main>
+
+<script>
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const errorMsg = document.getElementById('errorMsg');
+
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                // Alihkan ke halaman beranda setelah login berhasil
+                window.location.href = "/";
+            } else {
+                errorMsg.innerText = result.message || "Gagal masuk.";
+                errorMsg.classList.remove('hidden');
+            }
+        } catch (err) {
+            errorMsg.innerText = "Gagal menghubungi server.";
+            errorMsg.classList.remove('hidden');
+        }
+    });
+</script>
+
+{{ template "footer" . }}

@@ -1,0 +1,69 @@
+{{ template "header" . }}
+{{ template "navbar" . }}
+
+<!-- HERO BANNER (Luxury Minimalist) -->
+<section class="relative h-[80vh] flex items-center bg-[#F4F1EA] overflow-hidden">
+    <!-- Gambar Latar Belakang Hero Estetik (Luxury Vibe) -->
+    <div class="absolute inset-0 opacity-40">
+        <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600" class="w-full h-full object-cover" alt="Maison Hero">
+    </div>
+    <div class="relative max-w-7xl mx-auto px-6 w-full z-10">
+        <div class="max-w-xl">
+            <span class="text-[10px] uppercase tracking-[0.3em] text-gray-500 block mb-3">Musim Semi / Panas 2026</span>
+			<h1 class="text-5xl md:text-7xl font-serif-luxury font-light tracking-tight leading-tight mb-6">
+				Kemurnian dalam <br><span class="italic">Kesederhanaan</span>
+			</h1>
+            <p class="text-xs md:text-sm text-gray-600 tracking-wide leading-relaxed mb-8">
+                Menghadirkan koleksi busana dengan serat sutra murni dan wol premium yang dirancang khusus untuk kenyamanan abadi Anda.
+            </p>
+            <a href="#catalog" class="inline-block bg-[#1C1C1C] text-white text-[10px] uppercase tracking-[0.25em] font-medium px-10 py-4 hover:bg-gray-800 transition-colors">
+                Jelajahi Koleksi
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- SEKSI KATALOG PRODUK -->
+<section id="catalog" class="max-w-7xl mx-auto px-6 py-20">
+    <!-- Judul & Filter Kategori -->
+    <div class="flex flex-col md:flex-row justify-between items-baseline border-b border-[#E5E0D8] pb-6 mb-12">
+        <h2 class="text-2xl font-serif-luxury tracking-widest uppercase">Katalog Pilihan</h2>
+        <div class="flex space-x-6 text-[10px] uppercase tracking-[0.2em] font-medium text-gray-500 mt-4 md:mt-0">
+            <a href="#" class="text-black border-b border-black pb-1">Semua</a>
+            {{ range .categories }}
+            <a href="#" class="hover:text-black transition-colors">{{ .Name }}</a>
+            {{ end }}
+        </div>
+    </div>
+
+    <!-- Grid Kartu Produk -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-16">
+        {{ range .products }}
+        <div class="group flex flex-col">
+            <!-- Foto Produk -->
+            <div class="bg-[#F4F1EA] aspect-[3/4] overflow-hidden mb-6 relative border border-[#E5E0D8]/40">
+                <a href="/products/{{ .Slug }}">
+                    <img src="{{ .ImageURL }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" alt="{{ .Name }}">
+                </a>
+            </div>
+            <!-- Detail Informasi Produk -->
+            <div class="flex justify-between items-baseline mb-2">
+                <span class="text-[9px] uppercase tracking-[0.2em] text-gray-400 font-semibold">{{ .Category.Name }}</span>
+                <span class="text-[10px] text-gray-500">Tersedia {{ .Stock }} Pcs</span>
+            </div>
+            <h3 class="text-sm font-serif-luxury tracking-wider hover:text-gray-600 transition-colors mb-2">
+                <a href="/products/{{ .Slug }}">{{ .Name }}</a>
+            </h3>
+            <p class="text-xs font-semibold text-[#1C1C1C] tracking-widest mt-auto">
+                IDR {{ .Price }}
+            </p>
+        </div>
+        {{ else }}
+        <div class="col-span-3 text-center py-20">
+			<p class="text-gray-500 text-sm italic font-serif-luxury">Belum ada koleksi produk pakaian yang terdaftar.</p>
+        </div>
+        {{ end }}
+    </div>
+</section>
+
+{{ template "footer" . }}

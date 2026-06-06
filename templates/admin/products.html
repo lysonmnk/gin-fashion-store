@@ -1,0 +1,147 @@
+{{ template "header" . }}
+{{ template "navbar" . }}
+
+<main class="max-w-7xl mx-auto px-6 py-20 flex-grow">
+    <div class="flex flex-col md:flex-row justify-between items-baseline border-b border-[#E5E0D8] pb-6 mb-12">
+        <h1 class="text-3xl font-serif-luxury tracking-widest uppercase">Kelola Inventaris Toko</h1>
+        <a href="/admin/dashboard" class="text-[10px] uppercase tracking-[0.2em] font-semibold text-gray-500 hover:text-black transition-colors mt-2 md:mt-0">
+            Kembali ke Dashboard
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-16">
+        <!-- Sisi Kiri: Formulir Kategori & Produk Baru -->
+        <div class="lg:col-span-1 space-y-12">
+            <!-- Form Kategori Baru -->
+            <div class="bg-white border border-[#E5E0D8] p-8">
+                <h2 class="text-xs font-serif-luxury tracking-widest uppercase mb-6 border-b border-[#E5E0D8] pb-3">Buat Kategori Baru</h2>
+                <form id="categoryForm" class="space-y-4">
+                    <div>
+                        <label class="block text-[9px] uppercase tracking-[0.2em] font-medium text-gray-500 mb-2">Nama Kategori</label>
+                        <input type="text" id="catName" required placeholder="Misal: Accessories, Shoes, Coats" class="w-full border border-[#E5E0D8] px-4 py-3 text-xs bg-[#FAF9F6] focus:outline-none focus:border-black transition-colors">
+                    </div>
+                    <button type="submit" class="w-full bg-[#1C1C1C] text-white text-[10px] uppercase tracking-[0.25em] font-medium py-3 hover:bg-gray-800 transition-colors">Buat Kategori</button>
+                </form>
+            </div>
+
+            <!-- Form Produk Baru -->
+            <div class="bg-white border border-[#E5E0D8] p-8">
+                <h2 class="text-xs font-serif-luxury tracking-widest uppercase mb-6 border-b border-[#E5E0D8] pb-3">Daftarkan Produk Baru</h2>
+                <form id="productForm" class="space-y-4">
+                    <div>
+                        <label class="block text-[9px] uppercase tracking-[0.2em] font-medium text-gray-500 mb-2">Nama Produk Busana</label>
+                        <input type="text" id="prodName" required placeholder="Contoh: Silk Blouse Premium" class="w-full border border-[#E5E0D8] px-4 py-3 text-xs bg-[#FAF9F6] focus:outline-none focus:border-black transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-[9px] uppercase tracking-[0.2em] font-medium text-gray-500 mb-2">Kategori</label>
+                        <select id="prodCat" required class="w-full border border-[#E5E0D8] px-4 py-3 text-xs bg-[#FAF9F6] focus:outline-none focus:border-black transition-colors uppercase tracking-wider">
+                            {{ range .categories }}
+                            <option value="{{ .ID }}">{{ .Name }}</option>
+                            {{ end }}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[9px] uppercase tracking-[0.2em] font-medium text-gray-500 mb-2">Harga Jual (IDR)</label>
+                        <input type="number" id="prodPrice" required placeholder="1450000" class="w-full border border-[#E5E0D8] px-4 py-3 text-xs bg-[#FAF9F6] focus:outline-none focus:border-black transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-[9px] uppercase tracking-[0.2em] font-medium text-gray-500 mb-2">Jumlah Kapasitas Stok</label>
+                        <input type="number" id="prodStock" required placeholder="12" class="w-full border border-[#E5E0D8] px-4 py-3 text-xs bg-[#FAF9F6] focus:outline-none focus:border-black transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-[9px] uppercase tracking-[0.2em] font-medium text-gray-500 mb-2">URL Gambar Unsplash</label>
+                        <input type="url" id="prodImg" required placeholder="https://images.unsplash.com/photo-..." class="w-full border border-[#E5E0D8] px-4 py-3 text-xs bg-[#FAF9F6] focus:outline-none focus:border-black transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-[9px] uppercase tracking-[0.2em] font-medium text-gray-500 mb-2">Deskripsi Lengkap Produk</label>
+                        <textarea id="prodDesc" rows="3" placeholder="Tulis deskripsi material bahan, potongan kain, siluet, dsb..." class="w-full border border-[#E5E0D8] px-4 py-3 text-xs bg-[#FAF9F6] focus:outline-none focus:border-black transition-colors leading-relaxed"></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-[#1C1C1C] text-white text-[10px] uppercase tracking-[0.25em] font-medium py-4 hover:bg-gray-800 transition-colors">Daftarkan Produk</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sisi Kanan: Tabel Koleksi Inventaris yang Ada -->
+        <div class="lg:col-span-2">
+            <div class="bg-white border border-[#E5E0D8] overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[500px]">
+                    <thead>
+                        <tr class="border-b border-[#E5E0D8] bg-[#FAF9F6] text-[10px] uppercase tracking-wider text-gray-500">
+                            <th class="py-4 px-6 font-semibold">Produk Busana</th>
+                            <th class="py-4 px-6 font-semibold">Kategori</th>
+                            <th class="py-4 px-6 font-semibold">Harga</th>
+                            <th class="py-4 px-6 font-semibold">Sisa Stok</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#E5E0D8] text-xs">
+                        {{ range .products }}
+                        <tr class="hover:bg-[#FAF9F6]/50 transition-colors">
+                            <td class="py-4 px-6 flex items-center space-x-4">
+                                <div class="w-10 h-12 bg-gray-100 overflow-hidden flex-shrink-0 border border-[#E5E0D8]/50">
+                                    <img src="{{ .ImageURL }}" class="w-full h-full object-cover" alt="{{ .Name }}">
+                                </div>
+                                <span class="font-serif-luxury tracking-wide font-medium text-sm text-gray-800">{{ .Name }}</span>
+                            </td>
+                            <td class="py-4 px-6 text-gray-500">{{ .Category.Name }}</td>
+                            <td class="py-4 px-6 font-semibold">IDR {{ .Price }}</td>
+                            <td class="py-4 px-6 text-gray-600 font-medium">{{ .Stock }} Pcs</td>
+                        </tr>
+                        {{ else }}
+                        <tr>
+                            <td colspan="4" class="py-12 text-center text-gray-400 italic">Belum ada koleksi produk terdaftar.</td>
+                        </tr>
+                        {{ end }}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    // Memproses Pembuatan Kategori Baru (POST API Admin)
+    document.getElementById('categoryForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const name = document.getElementById('catName').value;
+        try {
+            const response = await fetch('/api/admin/categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                const r = await response.json();
+                alert(r.message || "Gagal membuat kategori.");
+            }
+        } catch(err) { alert("Terjadi gangguan jaringan."); }
+    });
+
+    // Memproses Registrasi Produk Pakaian Baru (POST API Admin)
+    document.getElementById('productForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const name = document.getElementById('prodName').value;
+        const category_id = parseInt(document.getElementById('prodCat').value);
+        const price = parseFloat(document.getElementById('prodPrice').value);
+        const stock = parseInt(document.getElementById('prodStock').value);
+        const image_url = document.getElementById('prodImg').value;
+        const description = document.getElementById('prodDesc').value;
+
+        try {
+            const response = await fetch('/api/admin/products', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, category_id, price, stock, image_url, description })
+            });
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                const r = await response.json();
+                alert(r.message || "Gagal menambahkan produk pakaian.");
+            }
+        } catch(err) { alert("Terjadi gangguan jaringan."); }
+    });
+</script>
+
+{{ template "footer" . }}

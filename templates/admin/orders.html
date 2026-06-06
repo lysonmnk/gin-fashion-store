@@ -1,0 +1,99 @@
+{{ template "header" . }}
+{{ template "navbar" . }}
+
+<!-- Menentukan peran pengguna secara dinamis dari Judul Halaman -->
+{{ $isAdmin := eq .title "Maison Admin | Order List" }}
+
+<main class="max-w-7xl mx-auto px-6 py-20 flex-grow">
+    <div class="flex flex-col md:flex-row justify-between items-baseline border-b border-[#E5E0D8] pb-6 mb-12">
+        <h1 class="text-3xl font-serif-luxury tracking-widest uppercase">
+            {{ if $isAdmin }}Manajemen Transaksi (Admin){{ else }}Riwayat Belanja Anda{{ end }}
+        </h1>
+        {{ if $isAdmin }}
+        <a href="/admin/dashboard" class="text-[10px] uppercase tracking-[0.2em] font-semibold text-gray-500 hover:text-black transition-colors mt-2 md:mt-0">
+            Kembali ke Dashboard
+        </a>
+        {{ end }}
+    </div>
+
+    <!-- Tabel Daftar Pesanan -->
+    <div class="bg-white border border-[#E5E0D8] overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[700px]">
+            <thead>
+                <tr class="border-b border-[#E5E0D8] bg-[#FAF9F6] text-[10px] uppercase tracking-wider text-gray-500">
+                    <th class="py-4 px-6 font-semibold">ID Pesanan</th>
+                    <th class="py-4 px-6 font-semibold">Tanggal Pembelian</th>
+                    <th class="py-4 px-6 font-semibold">Alamat Pengiriman</th>
+                    <th class="py-4 px-6 font-semibold">Total Pembayaran</th>
+                    <th class="py-4 px-6 font-semibold">Status Pengiriman</th>
+                    {{ if $isAdmin }}
+                    <th class="py-4 px-6 font-semibold text-right">Ubah Status</th>
+                    {{ end }}
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-[#E5E0D8] text-xs">
+                {{ range .orders }}
+                <tr class="hover:bg-[#FAF9F6]/50 transition-colors">
+                    <td class="py-5 px-6 font-semibold text-[#1C1C1C]">#MSN-{{ .ID }}</td>
+                    <td class="py-5 px-6 text-gray-500">{{ .CreatedAt.Format "02 Jan 2006, 15:04" }}</td>
+                    <td class="py-5 px-6 text-gray-600 max-w-xs truncate">{{ .ShippingAddress }}</td>
+                    <td class="py-5 px-6 font-semibold text-gray-800">IDR {{ .TotalPrice }}</td>
+                    <td class="py-5 px-6">
+                        <span class="inline-block px-3 py-1 text-[9px] uppercase tracking-widest font-bold 
+                            {{ if eq .Status "Pending" }}bg-yellow-100 text-yellow-800 border border-yellow-200
+                            {{ else if eq .Status "Paid" }}bg-blue-100 text-blue-800 border border-blue-200
+                            {{ else if eq .Status "Shipped" }}bg-purple-100 text-purple-800 border border-purple-200
+                            {{ else if eq .Status "Completed" }}bg-green-100 text-green-800 border border-green-200
+                            {{ else }}bg-red-100 text-red-800 border border-red-200{{ end }}">
+                            {{ .Status }}
+                        </span>
+                    </td>
+                    {{ if $isAdmin }}
+                    <td class="py-5 px-6 text-right">
+                        <select onchange="updateStatus({{ .ID }}, this.value)" class="text-[10px] bg-[#FAF9F6] border border-[#E5E0D8] px-2 py-1 uppercase tracking-wider font-semibold focus:outline-none focus:border-black">
+                            <option value="Pending" {{ if eq .Status "Pending" }}selected{{ end }}>Pending</option>
+                            <option value="Paid" {{ if eq .Status "Paid" }}selected{{ end }}>Paid</option>
+                            <option value="Shipped" {{ if eq .Status "Shipped" }}selected{{ end }}>Shipped</option>
+                            <option value="Completed" {{ if eq .Status "Completed" }}selected{{ end }}>Completed</option>
+                            <option value="Cancelled" {{ if eq .Status "Cancelled" }}selected{{ end }}>Cancelled</option>
+                        </select>
+                    </td>
+                    {{ end }}
+                </tr>
+                {{ else }}
+                <tr>
+                    <td colspan="{{ if $isAdmin }}6{{ else }}5{{ end }}" class="py-16 text-center text-gray-400 italic font-serif-luxury text-sm">
+                        Belum ada riwayat transaksi yang tercatat di sistem ini.
+                    </td>
+                </tr>
+                {{ end }}
+            </tbody>
+        </table>
+    </div>
+</main>
+
+{{ if $isAdmin }}
+<script>
+    // Memproses Perubahan Status Order Real-Time khusus Administrator (PUT API)
+    async function updateStatus(orderId, newStatus) {
+        try {
+            const response = await fetch(`/api/admin/orders/${orderId}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                const result = await response.json();
+                alert(result.message || "Gagal memperbarui status pengiriman.");
+            }
+        } catch (err) {
+            alert("Gagal menghubungi server.");
+        }
+    }
+</script>
+{{ end }}
+
+{{ template "footer" . }}
