@@ -10,7 +10,7 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-16">
-        <!-- Sisi Kiri: Formulir Kategori & Produk Baru -->
+        <!-- Sisi Kiri: Form Kategori & Produk Baru -->
         <div class="lg:col-span-1 space-y-12">
             <!-- Form Kategori Baru -->
             <div class="bg-white border border-[#E5E0D8] p-8">
@@ -24,10 +24,12 @@
                 </form>
             </div>
 
-            <!-- Form Produk Baru -->
+            <!-- Form Produk Baru / Edit -->
             <div class="bg-white border border-[#E5E0D8] p-8">
-                <h2 class="text-xs font-serif-luxury tracking-widest uppercase mb-6 border-b border-[#E5E0D8] pb-3">Daftarkan Produk Baru</h2>
+                <h2 id="formTitle" class="text-xs font-serif-luxury tracking-widest uppercase mb-6 border-b border-[#E5E0D8] pb-3">Daftarkan Produk Baru</h2>
                 <form id="productForm" class="space-y-4">
+                    <!-- BUG FIX: Tambah hidden input untuk mode edit -->
+                    <input type="hidden" id="editProductId" value="">
                     <div>
                         <label class="block text-[9px] uppercase tracking-[0.2em] font-medium text-gray-500 mb-2">Nama Produk Busana</label>
                         <input type="text" id="prodName" required placeholder="Contoh: Silk Blouse Premium" class="w-full border border-[#E5E0D8] px-4 py-3 text-xs bg-[#FAF9F6] focus:outline-none focus:border-black transition-colors">
@@ -56,12 +58,16 @@
                         <label class="block text-[9px] uppercase tracking-[0.2em] font-medium text-gray-500 mb-2">Deskripsi Lengkap Produk</label>
                         <textarea id="prodDesc" rows="3" placeholder="Tulis deskripsi material bahan, potongan kain, siluet, dsb..." class="w-full border border-[#E5E0D8] px-4 py-3 text-xs bg-[#FAF9F6] focus:outline-none focus:border-black transition-colors leading-relaxed"></textarea>
                     </div>
-                    <button type="submit" class="w-full bg-[#1C1C1C] text-white text-[10px] uppercase tracking-[0.25em] font-medium py-4 hover:bg-gray-800 transition-colors">Daftarkan Produk</button>
+                    <div class="flex gap-3">
+                        <button type="submit" id="submitBtn" class="flex-1 bg-[#1C1C1C] text-white text-[10px] uppercase tracking-[0.25em] font-medium py-4 hover:bg-gray-800 transition-colors">Daftarkan Produk</button>
+                        <button type="button" id="cancelEditBtn" onclick="cancelEdit()" class="hidden px-4 py-4 border border-[#E5E0D8] text-[10px] uppercase tracking-[0.2em] text-gray-500 hover:border-black transition-colors">Batal</button>
+                    </div>
                 </form>
+                <div id="formMsg" class="hidden mt-4 text-center text-[10px] uppercase tracking-wider p-3"></div>
             </div>
         </div>
 
-        <!-- Sisi Kanan: Tabel Koleksi Inventaris yang Ada -->
+        <!-- Sisi Kanan: Tabel Inventaris -->
         <div class="lg:col-span-2">
             <div class="bg-white border border-[#E5E0D8] overflow-x-auto">
                 <table class="w-full text-left border-collapse min-w-[500px]">
@@ -70,7 +76,9 @@
                             <th class="py-4 px-6 font-semibold">Produk Busana</th>
                             <th class="py-4 px-6 font-semibold">Kategori</th>
                             <th class="py-4 px-6 font-semibold">Harga</th>
-                            <th class="py-4 px-6 font-semibold">Sisa Stok</th>
+                            <th class="py-4 px-6 font-semibold">Stok</th>
+                            <!-- BUG FIX: Tambah kolom aksi Edit & Delete -->
+                            <th class="py-4 px-6 font-semibold text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#E5E0D8] text-xs">
@@ -83,12 +91,26 @@
                                 <span class="font-serif-luxury tracking-wide font-medium text-sm text-gray-800">{{ .Name }}</span>
                             </td>
                             <td class="py-4 px-6 text-gray-500">{{ .Category.Name }}</td>
-                            <td class="py-4 px-6 font-semibold">IDR {{ .Price }}</td>
+                            <td class="py-4 px-6 font-semibold">IDR {{ formatPrice .Price }}</td>
                             <td class="py-4 px-6 text-gray-600 font-medium">{{ .Stock }} Pcs</td>
+                            <td class="py-4 px-6 text-right">
+                                <div class="flex justify-end gap-3">
+                                    <button
+                                        onclick="openEdit({{ .ID }}, '{{ .Name }}', {{ .CategoryID }}, {{ .Price }}, {{ .Stock }}, '{{ .ImageURL }}', '{{ .Description }}')"
+                                        class="text-[9px] uppercase tracking-widest text-blue-600 hover:underline">
+                                        Edit
+                                    </button>
+                                    <button
+                                        onclick="deleteProduct({{ .ID }}, '{{ .Name }}')"
+                                        class="text-[9px] uppercase tracking-widest text-red-600 hover:underline">
+                                        Hapus
+                                    </button>
+                                </div>
+                            </td>
                         </tr>
                         {{ else }}
                         <tr>
-                            <td colspan="4" class="py-12 text-center text-gray-400 italic">Belum ada koleksi produk terdaftar.</td>
+                            <td colspan="5" class="py-12 text-center text-gray-400 italic">Belum ada koleksi produk terdaftar.</td>
                         </tr>
                         {{ end }}
                     </tbody>
@@ -99,49 +121,89 @@
 </main>
 
 <script>
-    // Memproses Pembuatan Kategori Baru (POST API Admin)
+    // ── Kategori ──────────────────────────────────────────────
     document.getElementById('categoryForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const name = document.getElementById('catName').value;
-        try {
-            const response = await fetch('/api/admin/categories', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name })
-            });
-            if (response.ok) {
-                window.location.reload();
-            } else {
-                const r = await response.json();
-                alert(r.message || "Gagal membuat kategori.");
-            }
-        } catch(err) { alert("Terjadi gangguan jaringan."); }
+        const response = await fetch('/api/admin/categories', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        });
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            const r = await response.json();
+            alert(r.message || 'Gagal membuat kategori.');
+        }
     });
 
-    // Memproses Registrasi Produk Pakaian Baru (POST API Admin)
+    // ── Produk: Tambah / Edit ─────────────────────────────────
     document.getElementById('productForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        const name = document.getElementById('prodName').value;
-        const category_id = parseInt(document.getElementById('prodCat').value);
-        const price = parseFloat(document.getElementById('prodPrice').value);
-        const stock = parseInt(document.getElementById('prodStock').value);
-        const image_url = document.getElementById('prodImg').value;
-        const description = document.getElementById('prodDesc').value;
+        const editId = document.getElementById('editProductId').value;
+        const isEdit = editId !== '';
 
-        try {
-            const response = await fetch('/api/admin/products', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, category_id, price, stock, image_url, description })
-            });
-            if (response.ok) {
-                window.location.reload();
-            } else {
-                const r = await response.json();
-                alert(r.message || "Gagal menambahkan produk pakaian.");
-            }
-        } catch(err) { alert("Terjadi gangguan jaringan."); }
+        const payload = {
+            name:        document.getElementById('prodName').value,
+            category_id: parseInt(document.getElementById('prodCat').value),
+            price:       parseFloat(document.getElementById('prodPrice').value),
+            stock:       parseInt(document.getElementById('prodStock').value),
+            image_url:   document.getElementById('prodImg').value,
+            description: document.getElementById('prodDesc').value,
+        };
+
+        const url    = isEdit ? `/api/admin/products/${editId}` : '/api/admin/products';
+        const method = isEdit ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            const r = await response.json();
+            alert(r.message || 'Gagal menyimpan produk.');
+        }
     });
+
+    // ── Isi form untuk mode Edit ──────────────────────────────
+    function openEdit(id, name, catId, price, stock, imageUrl, desc) {
+        document.getElementById('editProductId').value = id;
+        document.getElementById('prodName').value      = name;
+        document.getElementById('prodCat').value       = catId;
+        document.getElementById('prodPrice').value     = price;
+        document.getElementById('prodStock').value     = stock;
+        document.getElementById('prodImg').value       = imageUrl;
+        document.getElementById('prodDesc').value      = desc;
+        document.getElementById('formTitle').innerText = 'Edit Produk';
+        document.getElementById('submitBtn').innerText = 'Simpan Perubahan';
+        document.getElementById('cancelEditBtn').classList.remove('hidden');
+        document.getElementById('productForm').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function cancelEdit() {
+        document.getElementById('editProductId').value = '';
+        document.getElementById('productForm').reset();
+        document.getElementById('formTitle').innerText      = 'Daftarkan Produk Baru';
+        document.getElementById('submitBtn').innerText      = 'Daftarkan Produk';
+        document.getElementById('cancelEditBtn').classList.add('hidden');
+    }
+
+    // ── Hapus Produk ──────────────────────────────────────────
+    async function deleteProduct(id, name) {
+        if (!confirm(`Hapus produk "${name}"? Tindakan ini tidak dapat dibatalkan.`)) return;
+        const response = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            const r = await response.json();
+            alert(r.message || 'Gagal menghapus produk.');
+        }
+    }
 </script>
 
 {{ template "footer" . }}

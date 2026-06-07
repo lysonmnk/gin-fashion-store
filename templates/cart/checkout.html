@@ -32,11 +32,10 @@
                 <div class="flex justify-between items-start text-xs gap-4">
                     <div class="flex flex-col">
                         <span class="text-gray-600 font-medium">{{ .Product.Name }}</span>
-                        <span class="text-gray-400 mt-1">{{ .Quantity }} pcs &times; IDR {{ .Product.Price }}</span>
+                        <span class="text-gray-400 mt-1">{{ .Quantity }} pcs &times; IDR {{ formatPrice .Product.Price }}</span>
                     </div>
-                    <!-- FIXED: harga dikali quantity -->
                     <span class="text-[#1C1C1C] font-semibold flex-shrink-0">
-                        IDR {{ printf "%.0f" (mul .Product.Price (float64 .Quantity)) }}
+                        IDR {{ printf "%.0f" (mul .Product.Price (float64 .Quantity)) | formatPrice }}
                     </span>
                 </div>
                 {{ end }}
@@ -45,6 +44,8 @@
             <div class="pt-6">
                 <div class="flex justify-between text-sm font-semibold tracking-widest text-[#1C1C1C]">
                     <span>TOTAL YANG DIBAYAR</span>
+                    <!-- BUG FIX: setTotal() sebelumnya tidak pernah dipanggil,
+                         sehingga total selalu tampil "IDR Memuat..." selamanya -->
                     <span id="checkout-total">IDR Memuat...</span>
                 </div>
             </div>
@@ -53,17 +54,24 @@
 </main>
 
 <script>
-    function setTotal() {
+    // BUG FIX: Panggil setTotal() saat DOM selesai dimuat
+    document.addEventListener('DOMContentLoaded', function() {
+        const total = {{ .total }};
         const element = document.getElementById('checkout-total');
         if (element) {
-            element.innerText = "IDR " + ({{ .total }}).toLocaleString('id-ID');
+            element.innerText = "IDR " + total.toLocaleString('id-ID');
         }
-    }
+    });
 
     document.getElementById('checkoutForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const address = document.getElementById('address').value;
         const errorMsg = document.getElementById('errorMsg');
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Memproses...';
+        errorMsg.classList.add('hidden');
 
         try {
             const response = await fetch('/api/checkout', {
@@ -79,14 +87,16 @@
             } else {
                 errorMsg.innerText = result.message || "Gagal memproses pengiriman.";
                 errorMsg.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Konfirmasi Dan Selesaikan Pembelian';
             }
         } catch (err) {
-            errorMsg.innerText = "Koneksi ke server bermasalah.";
+            errorMsg.innerText = "Gagal menghubungi server.";
             errorMsg.classList.remove('hidden');
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'Konfirmasi Dan Selesaikan Pembelian';
         }
     });
-
-    setTotal();
 </script>
 
 {{ template "footer" . }}

@@ -1,6 +1,7 @@
 package router
 
 import (
+	"fmt"
 	"fashion-store/internal/handlers"
 	"fashion-store/internal/middleware"
 	"fashion-store/internal/repository"
@@ -25,6 +26,19 @@ func SetupRouter() *gin.Engine {
 		},
 		"float64": func(i int) float64 {
 			return float64(i)
+		},
+		// BUG FIX: Tambah fungsi formatPrice agar harga tampil dengan pemisah ribuan
+		// Sebelumnya harga tampil mentah: "IDR 1250000" → sekarang: "IDR 1.250.000"
+		"formatPrice": func(price float64) string {
+			s := fmt.Sprintf("%.0f", price)
+			result := ""
+			for i, c := range s {
+				if i > 0 && (len(s)-i)%3 == 0 {
+					result += "."
+				}
+				result += string(c)
+			}
+			return result
 		},
 	})
 
@@ -51,7 +65,7 @@ func SetupRouter() *gin.Engine {
 
 	// 5. Rute Web Publik
 	r.GET("/", productHandler.ShowHomePage)
-	r.GET("/catalog", productHandler.ShowCatalogPage) // ← BARU
+	r.GET("/catalog", productHandler.ShowCatalogPage)
 	r.GET("/products/:slug", productHandler.ShowProductDetail)
 	r.GET("/login", authHandler.ShowLoginForm)
 	r.GET("/register", authHandler.ShowRegisterForm)
@@ -100,8 +114,8 @@ func SetupRouter() *gin.Engine {
 			adminAPI.POST("/products", productHandler.CreateProductAPI)
 			adminAPI.POST("/categories", productHandler.CreateCategoryAPI)
 			adminAPI.PUT("/orders/:id/status", adminHandler.UpdateOrderStatusAPI)
-			adminAPI.PUT("/products/:id", productHandler.UpdateProductAPI)       // ← BONUS
-			adminAPI.DELETE("/products/:id", productHandler.DeleteProductAPI)    // ← BONUS
+			adminAPI.PUT("/products/:id", productHandler.UpdateProductAPI)
+			adminAPI.DELETE("/products/:id", productHandler.DeleteProductAPI)
 		}
 	}
 

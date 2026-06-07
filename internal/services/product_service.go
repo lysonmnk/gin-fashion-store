@@ -3,6 +3,7 @@ package services
 import (
 	"fashion-store/internal/models"
 	"fashion-store/internal/repository"
+	"regexp"
 	"strings"
 )
 
@@ -25,9 +26,17 @@ func NewProductService(repo repository.ProductRepository) ProductService {
 	return &productService{productRepo: repo}
 }
 
+// BUG FIX: Sebelumnya hanya ganti spasi, karakter seperti ( ) / & ' , akan lolos
+// dan menghasilkan slug yang invalid sebagai URL path
+var nonAlphanumericRegex = regexp.MustCompile(`[^a-z0-9-]+`)
+var multipleDashRegex = regexp.MustCompile(`-{2,}`)
+
 func makeSlug(s string) string {
 	s = strings.ToLower(s)
 	s = strings.ReplaceAll(s, " ", "-")
+	s = nonAlphanumericRegex.ReplaceAllString(s, "")
+	s = multipleDashRegex.ReplaceAllString(s, "-")
+	s = strings.Trim(s, "-")
 	return s
 }
 
@@ -91,4 +100,4 @@ func (s *productService) CreateCategory(name string) (*models.Category, error) {
 
 func (s *productService) GetAllCategories() ([]models.Category, error) {
 	return s.productRepo.FindAllCategories()
-}	
+}

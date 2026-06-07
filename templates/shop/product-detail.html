@@ -12,7 +12,8 @@
         <div class="flex flex-col justify-center h-full">
             <span class="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-semibold mb-2">{{ .product.Category.Name }}</span>
             <h1 class="text-3xl md:text-5xl font-serif-luxury tracking-wide leading-tight mb-4">{{ .product.Name }}</h1>
-            <p class="text-lg font-semibold tracking-widest text-[#1C1C1C] mb-6">IDR {{ .product.Price }}</p>
+            <!-- BUG FIX: Gunakan formatPrice -->
+            <p class="text-lg font-semibold tracking-widest text-[#1C1C1C] mb-6">IDR {{ formatPrice .product.Price }}</p>
             
             <div class="border-t border-b border-[#E5E0D8] py-6 mb-8">
                 <h3 class="text-[10px] uppercase tracking-[0.2em] font-medium text-gray-500 mb-3">Deskripsi Produk</h3>
@@ -31,12 +32,18 @@
                     <span class="text-[10px] text-gray-400">Stok Tersedia: {{ .product.Stock }} Pcs</span>
                 </div>
 
+                {{ if gt .product.Stock 0 }}
                 <button onclick="addToCart({{ .product.ID }})" class="w-full bg-[#1C1C1C] text-white text-[10px] uppercase tracking-[0.25em] font-medium py-4 hover:bg-gray-800 transition-colors mt-4">
                     Tambahkan Ke Tas Belanja
                 </button>
+                {{ else }}
+                <button disabled class="w-full bg-gray-300 text-gray-500 text-[10px] uppercase tracking-[0.25em] font-medium py-4 cursor-not-allowed mt-4">
+                    Stok Habis
+                </button>
+                {{ end }}
             </div>
             
-            <!-- Toast Notifikasi Ringkas -->
+            <!-- Toast Notifikasi -->
             <div id="toast" class="hidden mt-4 text-center text-[10px] uppercase tracking-wider p-3"></div>
         </div>
     </div>
@@ -47,17 +54,13 @@
         const input = document.getElementById('quantity');
         const max = parseInt(input.getAttribute('max'));
         let val = parseInt(input.value);
-        if (val < max) {
-            input.value = val + 1;
-        }
+        if (val < max) input.value = val + 1;
     }
 
     function decrementQty() {
         const input = document.getElementById('quantity');
         let val = parseInt(input.value);
-        if (val > 1) {
-            input.value = val - 1;
-        }
+        if (val > 1) input.value = val - 1;
     }
 
     async function addToCart(productId) {
@@ -67,13 +70,8 @@
         try {
             const response = await fetch('/api/cart', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    product_id: productId,
-                    quantity: qty
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ product_id: productId, quantity: qty })
             });
 
             const result = await response.json();
