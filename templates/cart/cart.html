@@ -1,119 +1,772 @@
-{{ template "header" . }}
-{{ template "navbar" . }}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart - MAISON</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <style>
+        .breadcrumb {
+            padding: var(--spacing-lg) 0;
+            border-bottom: 1px solid var(--border-color);
+        }
 
-<main class="max-w-7xl mx-auto px-6 py-20">
-    <h1 class="text-3xl font-serif-luxury tracking-widest uppercase mb-12">Tas Belanja Anda</h1>
+        .cart-header {
+            padding: var(--spacing-lg) 0;
+        }
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-16">
-        <!-- Bagian Kiri: Daftar Pakaian di Keranjang -->
-        <div class="lg:col-span-2 space-y-8">
-            {{ range .items }}
-            <div id="item-row-{{ .ProductID }}" class="flex items-center justify-between border-b border-[#E5E0D8] pb-8 gap-6">
-                <!-- Info Pakaian -->
-                <div class="flex items-center space-x-6">
-                    <div class="w-20 h-24 bg-[#F4F1EA] overflow-hidden border border-[#E5E0D8]/40 flex-shrink-0">
-                        <img src="{{ .Product.ImageURL }}" class="w-full h-full object-cover" alt="{{ .Product.Name }}">
-                    </div>
-                    <div>
-                        <span class="text-[9px] uppercase tracking-widest font-semibold text-gray-400 mb-1 block">{{ .Product.Category.Name }}</span>
-                        <h2 class="text-sm font-serif-luxury tracking-wide mb-2">{{ .Product.Name }}</h2>
-                        <p class="text-xs font-semibold text-gray-700">IDR {{ .Product.Price }}</p>
-                    </div>
-                </div>
+        .cart-header h1 {
+            margin-bottom: 0.5rem;
+        }
 
-                <!-- Selector Kuantitas & Hapus -->
-                <div class="flex items-center space-x-8">
-                    <div class="flex items-center border border-[#E5E0D8] bg-white">
-                        <button onclick="updateQty({{ .ProductID }}, {{ .Quantity }} - 1)" class="px-2 py-1 text-xs hover:bg-gray-100 transition-colors">-</button>
-                        <span class="px-3 text-xs">{{ .Quantity }}</span>
-                        <button onclick="updateQty({{ .ProductID }}, {{ .Quantity }} + 1)" class="px-2 py-1 text-xs hover:bg-gray-100 transition-colors">+</button>
-                    </div>
+        .cart-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: var(--spacing-xl);
+            margin: var(--spacing-xl) 0;
+        }
 
-                    <button onclick="removeItem({{ .ProductID }})" class="text-xs text-red-700 uppercase tracking-wider hover:underline transition-all">Hapus</button>
-                </div>
+        .cart-items {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-lg);
+        }
+
+        .cart-item {
+            display: grid;
+            grid-template-columns: 150px 1fr 120px;
+            gap: var(--spacing-lg);
+            padding: var(--spacing-lg);
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            align-items: center;
+            transition: all var(--transition-base);
+        }
+
+        .cart-item:hover {
+            box-shadow: var(--shadow-md);
+            border-color: var(--secondary);
+        }
+
+        .cart-item-image {
+            width: 100%;
+            height: 150px;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            background: var(--bg-gray);
+        }
+
+        .cart-item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .cart-item-details {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .cart-item-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin: 0;
+        }
+
+        .cart-item-meta {
+            display: flex;
+            gap: 1rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .cart-item-meta span {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .cart-item-price-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: flex-end;
+        }
+
+        .cart-item-price {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .cart-item-unit-price {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .cart-item-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--bg-gray);
+            border-radius: var(--radius-md);
+            padding: 0.25rem;
+        }
+
+        .cart-item-action-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            transition: all var(--transition-fast);
+            font-weight: 600;
+        }
+
+        .cart-item-action-btn:hover {
+            color: var(--primary);
+            background: white;
+            border-radius: var(--radius-sm);
+        }
+
+        .cart-item-quantity {
+            width: 40px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .cart-item-remove {
+            padding: var(--spacing-sm) 0;
+            color: #d32f2f;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .cart-item-remove:hover {
+            opacity: 0.7;
+        }
+
+        .cart-summary {
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+            background: var(--bg-section);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+        }
+
+        .summary-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-sm) 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .summary-row:last-of-type {
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            font-size: 1.125rem;
+            font-weight: 700;
+        }
+
+        .summary-row-label {
+            color: var(--text-muted);
+        }
+
+        .summary-row-value {
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .summary-row:last-of-type .summary-row-value {
+            color: var(--secondary);
+            font-size: 1.25rem;
+        }
+
+        .promo-code {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .promo-code input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+        }
+
+        .promo-code button {
+            padding: 0.75rem 1.25rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all var(--transition-fast);
+        }
+
+        .promo-code button:hover {
+            background: var(--primary-light);
+        }
+
+        .checkout-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--secondary);
+            color: var(--primary);
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .checkout-btn:hover {
+            background: var(--secondary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(212, 175, 55, 0.3);
+        }
+
+        .continue-shopping-btn {
+            width: 100%;
+            padding: 1rem;
+            background: white;
+            color: var(--primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .continue-shopping-btn:hover {
+            border-color: var(--secondary);
+            background: rgba(212, 175, 55, 0.05);
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: var(--spacing-2xl) var(--spacing-lg);
+        }
+
+        .empty-cart-icon {
+            font-size: 5rem;
+            margin-bottom: var(--spacing-lg);
+            opacity: 0.5;
+        }
+
+        .empty-cart h2 {
+            color: var(--text-muted);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .empty-cart p {
+            color: var(--text-light);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .shipping-options {
+            background: var(--bg-light);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            margin-top: var(--spacing-lg);
+        }
+
+        .shipping-title {
+            font-weight: 600;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .shipping-option {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            margin-bottom: var(--spacing-sm);
+            transition: all var(--transition-fast);
+        }
+
+        .shipping-option:last-child {
+            margin-bottom: 0;
+        }
+
+        .shipping-option:hover {
+            border-color: var(--secondary);
+            background: rgba(212, 175, 55, 0.05);
+        }
+
+        .shipping-option input {
+            cursor: pointer;
+            accent-color: var(--secondary);
+        }
+
+        .shipping-option-content {
+            flex: 1;
+        }
+
+        .shipping-option-name {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .shipping-option-time {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .shipping-option-price {
+            font-weight: 600;
+            color: var(--secondary);
+        }
+
+        @media (max-width: 1024px) {
+            .cart-content {
+                grid-template-columns: 1fr;
+            }
+
+            .cart-summary {
+                position: static;
+            }
+
+            .cart-item {
+                grid-template-columns: 120px 1fr;
+            }
+
+            .cart-item-price-section {
+                grid-column: 2;
+                margin-top: var(--spacing-sm);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .cart-item {
+                grid-template-columns: 1fr;
+                padding: var(--spacing-md);
+            }
+
+            .cart-item-image {
+                height: 200px;
+            }
+
+            .cart-item-actions {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .cart-item-price-section {
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar" id="navbar">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">MAISON</a>
+            <ul class="navbar-nav">
+                <li><a href="/">Home</a></li>
+                <li><a href="/shop">Koleksi</a></li>
+                <li><a href="/#features">Tentang</a></li>
+                <li><a href="/#contact">Kontak</a></li>
+            </ul>
+            <div class="navbar-icons">
+                <button class="icon-btn" onclick="toggleSearch()">🔍</button>
+                <button class="icon-btn">❤️</button>
+                <button class="icon-btn" onclick="goToCart()" class="active">
+                    🛒
+                    <span class="badge">3</span>
+                </button>
+                <button class="icon-btn">👤</button>
             </div>
-            {{ else }}
-            <div class="text-center py-20">
-                <p class="text-gray-500 text-xs uppercase tracking-widest italic mb-8">Tas belanja Anda saat ini masih kosong.</p>
-                <a href="/" class="inline-block bg-[#1C1C1C] text-white text-[10px] uppercase tracking-[0.25em] font-medium px-8 py-4 hover:bg-gray-800 transition-colors">Kembali Berbelanja</a>
-            </div>
-            {{ end }}
         </div>
+    </nav>
 
-        <!-- Bagian Kanan: Ringkasan & Checkout -->
-        {{ if .items }}
-        <div class="bg-white border border-[#E5E0D8] p-8 h-fit">
-            <h2 class="text-lg font-serif-luxury tracking-widest uppercase mb-6">Ringkasan Belanja</h2>
-            
-            <div class="border-b border-[#E5E0D8] pb-6">
-                <div class="flex justify-between text-xs text-gray-500 uppercase tracking-wider">
-                    <span>Jumlah Barang</span>
-                    <span>{{ len .items }} Item</span>
-                </div>
-            </div>
-
-            <div class="pt-6 mb-8">
-                <div class="flex justify-between text-sm font-semibold tracking-widest text-[#1C1C1C]">
-                    <span>TOTAL TAGIHAN</span>
-                    <span id="cart-total">IDR Memuat...</span>
-                </div>
-            </div>
-
-            <a href="/checkout" class="block text-center bg-[#1C1C1C] text-white text-[10px] uppercase tracking-[0.25em] font-medium py-4 hover:bg-gray-800 transition-colors w-full">
-                Lanjutkan Ke Checkout
-            </a>
+    <!-- BREADCRUMB -->
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="/">Home</a>
+            <span>/</span>
+            <span>Keranjang Belanja</span>
         </div>
-        {{ end }}
     </div>
-</main>
 
-<script>
-    // Menghitung Total Belanja Secara Dinamis di Sisi Client
-    function calculateTotal() {
-        let total = 0;
-        {{ range .items }}
-        total += {{ .Product.Price }} * {{ .Quantity }};
-        {{ end }}
-        const element = document.getElementById('cart-total');
-        if (element) {
-            element.innerText = "IDR " + total.toLocaleString('id-ID');
-        }
-    }
+    <!-- CART HEADER -->
+    <section class="container">
+        <div class="cart-header">
+            <h1>Keranjang Belanja Anda</h1>
+            <p class="text-muted">Anda memiliki 3 produk dalam keranjang</p>
+        </div>
 
-    async function updateQty(productId, qty) {
-        try {
-            const response = await fetch('/api/cart', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ product_id: productId, quantity: qty })
-            });
-            if (response.ok) {
-                window.location.reload();
+        <!-- CART CONTENT -->
+        <div class="cart-content">
+            <!-- LEFT SIDE - ITEMS -->
+            <div class="cart-items">
+                <!-- Cart Item 1 -->
+                <div class="cart-item">
+                    <div class="cart-item-image">
+                        <img src="https://images.unsplash.com/photo-1595777707802-c3179d9d08a1?w=300&h=400&fit=crop" alt="Elegant Silk Dress">
+                    </div>
+                    <div class="cart-item-details">
+                        <h3 class="cart-item-name">Elegant Silk Dress</h3>
+                        <div class="cart-item-meta">
+                            <span>Color: <strong>White</strong></span>
+                            <span>Size: <strong>M</strong></span>
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end;">
+                        <div class="cart-item-actions">
+                            <button class="cart-item-action-btn" onclick="updateQuantity(1, -1)">−</button>
+                            <div class="cart-item-quantity">1</div>
+                            <button class="cart-item-action-btn" onclick="updateQuantity(1, 1)">+</button>
+                        </div>
+                        <div class="cart-item-price">IDR 1.250.000</div>
+                        <span class="cart-item-unit-price">IDR 1.250.000/item</span>
+                        <span class="cart-item-remove" onclick="removeItem(1)">Hapus</span>
+                    </div>
+                </div>
+
+                <!-- Cart Item 2 -->
+                <div class="cart-item">
+                    <div class="cart-item-image">
+                        <img src="https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=300&h=400&fit=crop" alt="Velvet Trench Coat">
+                    </div>
+                    <div class="cart-item-details">
+                        <h3 class="cart-item-name">Velvet Trench Coat</h3>
+                        <div class="cart-item-meta">
+                            <span>Color: <strong>Brown</strong></span>
+                            <span>Size: <strong>S</strong></span>
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end;">
+                        <div class="cart-item-actions">
+                            <button class="cart-item-action-btn" onclick="updateQuantity(2, -1)">−</button>
+                            <div class="cart-item-quantity">1</div>
+                            <button class="cart-item-action-btn" onclick="updateQuantity(2, 1)">+</button>
+                        </div>
+                        <div class="cart-item-price">IDR 3.450.000</div>
+                        <span class="cart-item-unit-price">IDR 3.450.000/item</span>
+                        <span class="cart-item-remove" onclick="removeItem(2)">Hapus</span>
+                    </div>
+                </div>
+
+                <!-- Cart Item 3 -->
+                <div class="cart-item">
+                    <div class="cart-item-image">
+                        <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=400&fit=crop" alt="Designer Leather Bag">
+                    </div>
+                    <div class="cart-item-details">
+                        <h3 class="cart-item-name">Designer Leather Bag</h3>
+                        <div class="cart-item-meta">
+                            <span>Color: <strong>Black</strong></span>
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end;">
+                        <div class="cart-item-actions">
+                            <button class="cart-item-action-btn" onclick="updateQuantity(3, -1)">−</button>
+                            <div class="cart-item-quantity">2</div>
+                            <button class="cart-item-action-btn" onclick="updateQuantity(3, 1)">+</button>
+                        </div>
+                        <div class="cart-item-price">IDR 10.500.000</div>
+                        <span class="cart-item-unit-price">IDR 5.250.000/item</span>
+                        <span class="cart-item-remove" onclick="removeItem(3)">Hapus</span>
+                    </div>
+                </div>
+
+                <!-- Shipping Options -->
+                <div class="shipping-options">
+                    <div class="shipping-title">Pilih Metode Pengiriman</div>
+                    <label class="shipping-option">
+                        <input type="radio" name="shipping" value="standard" checked>
+                        <div class="shipping-option-content">
+                            <div class="shipping-option-name">Pengiriman Standar</div>
+                            <div class="shipping-option-time">3-5 hari kerja</div>
+                        </div>
+                        <div class="shipping-option-price">Gratis</div>
+                    </label>
+                    <label class="shipping-option">
+                        <input type="radio" name="shipping" value="express">
+                        <div class="shipping-option-content">
+                            <div class="shipping-option-name">Pengiriman Express</div>
+                            <div class="shipping-option-time">1-2 hari kerja</div>
+                        </div>
+                        <div class="shipping-option-price">IDR 75.000</div>
+                    </label>
+                    <label class="shipping-option">
+                        <input type="radio" name="shipping" value="same-day">
+                        <div class="shipping-option-content">
+                            <div class="shipping-option-name">Same Day Delivery</div>
+                            <div class="shipping-option-time">Hari yang sama</div>
+                        </div>
+                        <div class="shipping-option-price">IDR 150.000</div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- RIGHT SIDE - SUMMARY -->
+            <div class="cart-summary">
+                <div class="summary-title">Ringkasan Pesanan</div>
+
+                <div class="summary-row">
+                    <span class="summary-row-label">Subtotal</span>
+                    <span class="summary-row-value">IDR 15.200.000</span>
+                </div>
+
+                <div class="summary-row">
+                    <span class="summary-row-label">Diskon</span>
+                    <span class="summary-row-value" style="color: var(--secondary);">- IDR 0</span>
+                </div>
+
+                <div class="summary-row">
+                    <span class="summary-row-label">Pajak (10%)</span>
+                    <span class="summary-row-value">IDR 1.520.000</span>
+                </div>
+
+                <div class="summary-row">
+                    <span class="summary-row-label">Pengiriman</span>
+                    <span class="summary-row-value">Gratis</span>
+                </div>
+
+                <div class="summary-row">
+                    <span class="summary-row-label">Total</span>
+                    <span class="summary-row-value">IDR 16.720.000</span>
+                </div>
+
+                <!-- Promo Code -->
+                <div class="promo-code">
+                    <input type="text" placeholder="Masukkan kode promo" id="promoInput">
+                    <button onclick="applyPromo()">Gunakan</button>
+                </div>
+
+                <!-- Checkout Button -->
+                <button class="checkout-btn" onclick="goToCheckout()">
+                    Lanjut ke Checkout
+                </button>
+
+                <button class="continue-shopping-btn" onclick="continueShopping()">
+                    Lanjut Belanja
+                </button>
+
+                <!-- Trust Badges -->
+                <div style="margin-top: var(--spacing-lg); padding-top: var(--spacing-lg); border-top: 1px solid var(--border-color);">
+                    <p style="font-size: 0.8rem; color: var(--text-light); text-align: center; margin: 0;">
+                        ✓ Pembayaran Aman<br>
+                        ✓ Garansi 30 Hari<br>
+                        ✓ Gratis Ongkir >1 Juta
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- RECOMMENDED PRODUCTS SECTION -->
+    <section style="background: var(--bg-section); padding: var(--spacing-2xl) 0; margin-top: var(--spacing-2xl);">
+        <div class="container">
+            <div class="section-title">
+                <h2>Produk yang Mungkin Anda Sukai</h2>
+                <p class="section-subtitle">Produk rekomendasi berdasarkan item di keranjang Anda</p>
+            </div>
+
+            <div class="grid grid-cols-4">
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=300&h=400&fit=crop" alt="Classic Trousers">
+                    </div>
+                    <div class="product-info">
+                        <p class="product-category">Bottoms</p>
+                        <h4 class="product-name">Classic Wool Trousers</h4>
+                        <div class="product-price">
+                            <span class="price-current">IDR 1.850.000</span>
+                        </div>
+                        <div class="product-actions" style="margin-top: var(--spacing-md);">
+                            <button class="btn-add-cart" onclick="addToCart(3)">+ Keranjang</button>
+                            <button class="btn-wishlist">♡</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="https://images.unsplash.com/photo-1609003141455-0068893e794b?w=300&h=400&fit=crop" alt="Limited Edition">
+                        <div class="product-badge">NEW</div>
+                    </div>
+                    <div class="product-info">
+                        <p class="product-category">Limited</p>
+                        <h4 class="product-name">Limited Edition Blazer</h4>
+                        <div class="product-price">
+                            <span class="price-current">IDR 4.750.000</span>
+                        </div>
+                        <div class="product-actions" style="margin-top: var(--spacing-md);">
+                            <button class="btn-add-cart" onclick="addToCart(5)">+ Keranjang</button>
+                            <button class="btn-wishlist">♡</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=400&fit=crop" alt="Shoes">
+                    </div>
+                    <div class="product-info">
+                        <p class="product-category">Shoes</p>
+                        <h4 class="product-name">Designer Heel Shoes</h4>
+                        <div class="product-price">
+                            <span class="price-current">IDR 2.950.000</span>
+                        </div>
+                        <div class="product-actions" style="margin-top: var(--spacing-md);">
+                            <button class="btn-add-cart" onclick="addToCart(6)">+ Keranjang</button>
+                            <button class="btn-wishlist">♡</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="https://images.unsplash.com/photo-1595777707802-c3179d9d08a1?w=300&h=400&fit=crop" alt="Accessory">
+                    </div>
+                    <div class="product-info">
+                        <p class="product-category">Accessories</p>
+                        <h4 class="product-name">Premium Scarf</h4>
+                        <div class="product-price">
+                            <span class="price-current">IDR 850.000</span>
+                        </div>
+                        <div class="product-actions" style="margin-top: var(--spacing-md);">
+                            <button class="btn-add-cart" onclick="addToCart(7)">+ Keranjang</button>
+                            <button class="btn-wishlist">♡</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>MAISON</h3>
+                    <p style="margin-bottom: var(--spacing-md); color: rgba(255, 255, 255, 0.7);">Luxury Fashion Store untuk gaya hidup Anda.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Belanja</h3>
+                    <ul>
+                        <li><a href="/shop">Semua Produk</a></li>
+                        <li><a href="/shop?category=women">Wanita</a></li>
+                        <li><a href="/shop?category=men">Pria</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Bantuan</h3>
+                    <ul>
+                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Shipping</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Kontak</h3>
+                    <p style="color: rgba(255, 255, 255, 0.7); margin: 0;">hello@maison.com</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 MAISON. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 100) {
+                navbar.classList.add('scrolled');
             } else {
-                const result = await response.json();
-                alert(result.message || "Gagal menyesuaikan jumlah barang.");
+                navbar.classList.remove('scrolled');
             }
-        } catch (err) {
-            alert("Terjadi kegagalan koneksi.");
-        }
-    }
+        });
 
-    async function removeItem(productId) {
-        try {
-            const response = await fetch('/api/cart', {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ product_id: productId })
-            });
-            if (response.ok) {
-                window.location.reload();
+        function updateQuantity(itemId, change) {
+            showNotification('Jumlah produk diperbarui!', 'success');
+        }
+
+        function removeItem(itemId) {
+            showNotification('Produk dihapus dari keranjang', 'info');
+        }
+
+        function goToCheckout() {
+            window.location.href = '/checkout';
+        }
+
+        function continueShopping() {
+            window.location.href = '/shop';
+        }
+
+        function applyPromo() {
+            const promoCode = document.getElementById('promoInput').value;
+            if (promoCode.trim()) {
+                showNotification('Kode promo diterapkan!', 'success');
+                document.getElementById('promoInput').value = '';
+            } else {
+                showNotification('Masukkan kode promo terlebih dahulu', 'info');
             }
-        } catch (err) {
-            alert("Terjadi kegagalan koneksi.");
         }
-    }
 
-    calculateTotal();
-</script>
+        function toggleSearch() {
+            alert('Fitur search akan segera hadir!');
+        }
 
-{{ template "footer" . }}
+        function goToCart() {
+            window.location.href = '/cart';
+        }
+
+        function addToCart(productId) {
+            showNotification('Produk ditambahkan ke keranjang!', 'success');
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type}`;
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.right = '20px';
+            notification.style.zIndex = '9999';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
