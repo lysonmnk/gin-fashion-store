@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"fashion-store/internal/middleware"
 	"fashion-store/internal/services"
 	"fashion-store/utils"
 	"github.com/gin-gonic/gin"
@@ -16,7 +17,6 @@ func NewOrderHandler(orderService services.OrderService, cartService services.Ca
 	return &OrderHandler{orderService: orderService, cartService: cartService}
 }
 
-// ShowCheckoutPage menampilkan halaman ringkasan Checkout HTML
 func (h *OrderHandler) ShowCheckoutPage(c *gin.Context) {
 	userID, _ := c.Get("userID")
 	cartItems, err := h.cartService.GetCart(userID.(uint))
@@ -30,14 +30,13 @@ func (h *OrderHandler) ShowCheckoutPage(c *gin.Context) {
 		totalPrice += item.Product.Price * float64(item.Quantity)
 	}
 
-	c.HTML(http.StatusOK, "checkout.html", gin.H{
-		"title": "Maison | Checkout Delivery",
-		"items": cartItems,
-		"total": totalPrice,
-	})
+	navData := middleware.GetNavbarData(c)
+	navData["title"] = "Maison | Checkout Delivery"
+	navData["items"] = cartItems
+	navData["total"] = totalPrice
+	c.HTML(http.StatusOK, "checkout.html", navData)
 }
 
-// CheckoutAPI memproses pembuatan transaksi belanja baru via API
 func (h *OrderHandler) CheckoutAPI(c *gin.Context) {
 	userID, _ := c.Get("userID")
 	var req struct {
@@ -58,7 +57,6 @@ func (h *OrderHandler) CheckoutAPI(c *gin.Context) {
 	utils.JSONResponse(c, http.StatusCreated, "success", "Pesanan premium Anda berhasil didaftarkan", order)
 }
 
-// ShowOrderHistoryPage menyajikan riwayat belanja pengguna (Orders) HTML
 func (h *OrderHandler) ShowOrderHistoryPage(c *gin.Context) {
 	userID, _ := c.Get("userID")
 	orders, err := h.orderService.GetMyOrders(userID.(uint))
@@ -67,8 +65,8 @@ func (h *OrderHandler) ShowOrderHistoryPage(c *gin.Context) {
 		return
 	}
 
-	c.HTML(http.StatusOK, "orders.html", gin.H{
-		"title":  "Maison | Order History",
-		"orders": orders,
-	})
+	navData := middleware.GetNavbarData(c)
+	navData["title"] = "Maison | Order History"
+	navData["orders"] = orders
+	c.HTML(http.StatusOK, "orders.html", navData)
 }

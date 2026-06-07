@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"fashion-store/internal/middleware"
 	"fashion-store/internal/services"
 	"fashion-store/utils"
 	"github.com/gin-gonic/gin"
@@ -15,21 +16,26 @@ func NewAuthHandler(authService services.AuthService) *AuthHandler {
 	return &AuthHandler{authService: authService}
 }
 
-// ShowLoginForm menampilkan halaman form Login HTML
 func (h *AuthHandler) ShowLoginForm(c *gin.Context) {
-	c.HTML(http.StatusOK, "login.html", gin.H{
-		"title": "Maison | Sign In",
-	})
+	if _, err := c.Cookie("token"); err == nil {
+		c.Redirect(http.StatusSeeOther, "/")
+		return
+	}
+	navData := middleware.GetNavbarData(c)
+	navData["title"] = "Maison | Sign In"
+	c.HTML(http.StatusOK, "login.html", navData)
 }
 
-// ShowRegisterForm menampilkan halaman form Pendaftaran HTML
 func (h *AuthHandler) ShowRegisterForm(c *gin.Context) {
-	c.HTML(http.StatusOK, "register.html", gin.H{
-		"title": "Maison | Create Account",
-	})
+	if _, err := c.Cookie("token"); err == nil {
+		c.Redirect(http.StatusSeeOther, "/")
+		return
+	}
+	navData := middleware.GetNavbarData(c)
+	navData["title"] = "Maison | Create Account"
+	c.HTML(http.StatusOK, "register.html", navData)
 }
 
-// Register menangani pendaftaran akun baru via API (JSON)
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req struct {
 		Username string `json:"username" binding:"required"`
@@ -51,7 +57,6 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	utils.JSONResponse(c, http.StatusCreated, "success", "Pendaftaran akun Anda berhasil diselesaikan", user)
 }
 
-// Login menangani autentikasi akun dan menyetel sesi Cookie JWT
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req struct {
 		Email    string `json:"email" binding:"required,email"`
@@ -69,7 +74,6 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// Menyimpan token ke dalam Cookie agar browser secara otomatis menggunakannya saat memuat halaman web
 	c.SetCookie("token", token, 86400, "/", "", false, true)
 
 	utils.JSONResponse(c, http.StatusOK, "success", "Autentikasi berhasil", gin.H{
@@ -78,8 +82,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	})
 }
 
-// Logout menghapus sesi login dan mereset cookie token
 func (h *AuthHandler) Logout(c *gin.Context) {
 	c.SetCookie("token", "", -1, "/", "", false, true)
-	utils.JSONResponse(c, http.StatusOK, "success", "Anda berhasil keluar dari sistem", nil)
+	c.Redirect(http.StatusSeeOther, "/login")
 }

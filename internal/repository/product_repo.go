@@ -7,12 +7,11 @@ import (
 
 type ProductRepository interface {
 	Create(product *models.Product) error
-	FindAll() ([]models.Product, error)
+	FindAll(categorySlug string) ([]models.Product, error)
 	FindByID(id uint) (*models.Product, error)
 	FindBySlug(slug string) (*models.Product, error)
 	Update(product *models.Product) error
 	Delete(id uint) error
-	// Manajemen Kategori
 	CreateCategory(category *models.Category) error
 	FindAllCategories() ([]models.Category, error)
 }
@@ -27,9 +26,16 @@ func (r *productRepo) Create(product *models.Product) error {
 	return config.DB.Create(product).Error
 }
 
-func (r *productRepo) FindAll() ([]models.Product, error) {
+func (r *productRepo) FindAll(categorySlug string) ([]models.Product, error) {
 	var products []models.Product
-	err := config.DB.Preload("Category").Find(&products).Error
+	query := config.DB.Preload("Category")
+
+	if categorySlug != "" {
+		query = query.Joins("JOIN categories ON categories.id = products.category_id").
+			Where("categories.slug = ?", categorySlug)
+	}
+
+	err := query.Find(&products).Error
 	return products, err
 }
 

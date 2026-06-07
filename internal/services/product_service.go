@@ -8,12 +8,11 @@ import (
 
 type ProductService interface {
 	CreateProduct(name, description string, price float64, stock int, imageUrl string, categoryId uint) (*models.Product, error)
-	GetAllProducts() ([]models.Product, error)
+	GetAllProducts(categorySlug string) ([]models.Product, error)
 	GetProductByID(id uint) (*models.Product, error)
 	GetProductBySlug(slug string) (*models.Product, error)
 	UpdateProduct(id uint, name, description string, price float64, stock int, imageUrl string, categoryId uint) (*models.Product, error)
 	DeleteProduct(id uint) error
-
 	CreateCategory(name string) (*models.Category, error)
 	GetAllCategories() ([]models.Category, error)
 }
@@ -26,7 +25,6 @@ func NewProductService(repo repository.ProductRepository) ProductService {
 	return &productService{productRepo: repo}
 }
 
-// Fungsi bantu untuk mengubah nama produk menjadi format slug ramah URL
 func makeSlug(s string) string {
 	s = strings.ToLower(s)
 	s = strings.ReplaceAll(s, " ", "-")
@@ -48,8 +46,8 @@ func (s *productService) CreateProduct(name, description string, price float64, 
 	return product, err
 }
 
-func (s *productService) GetAllProducts() ([]models.Product, error) {
-	return s.productRepo.FindAll()
+func (s *productService) GetAllProducts(categorySlug string) ([]models.Product, error) {
+	return s.productRepo.FindAll(categorySlug)
 }
 
 func (s *productService) GetProductByID(id uint) (*models.Product, error) {
@@ -93,4 +91,4 @@ func (s *productService) CreateCategory(name string) (*models.Category, error) {
 
 func (s *productService) GetAllCategories() ([]models.Category, error) {
 	return s.productRepo.FindAllCategories()
-}
+}	

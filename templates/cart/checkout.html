@@ -29,9 +29,15 @@
             
             <div class="border-b border-[#E5E0D8] pb-6 space-y-4 max-h-60 overflow-y-auto">
                 {{ range .items }}
-                <div class="flex justify-between items-center text-xs gap-4">
-                    <span class="text-gray-600 font-medium truncate">{{ .Product.Name }} (x{{ .Quantity }})</span>
-                    <span class="text-[#1C1C1C] font-semibold flex-shrink-0">IDR {{ .Product.Price }}</span>
+                <div class="flex justify-between items-start text-xs gap-4">
+                    <div class="flex flex-col">
+                        <span class="text-gray-600 font-medium">{{ .Product.Name }}</span>
+                        <span class="text-gray-400 mt-1">{{ .Quantity }} pcs &times; IDR {{ .Product.Price }}</span>
+                    </div>
+                    <!-- FIXED: harga dikali quantity -->
+                    <span class="text-[#1C1C1C] font-semibold flex-shrink-0">
+                        IDR {{ printf "%.0f" (mul .Product.Price (float64 .Quantity)) }}
+                    </span>
                 </div>
                 {{ end }}
             </div>
@@ -69,7 +75,6 @@
             const result = await response.json();
 
             if (response.ok) {
-                // Alihkan ke riwayat pesanan ketika checkout berhasil diselesaikan
                 window.location.href = "/orders";
             } else {
                 errorMsg.innerText = result.message || "Gagal memproses pengiriman.";

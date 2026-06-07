@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"fashion-store/internal/middleware"
 	"fashion-store/internal/services"
 	"fashion-store/utils"
 	"github.com/gin-gonic/gin"
@@ -15,7 +16,6 @@ func NewCartHandler(cartService services.CartService) *CartHandler {
 	return &CartHandler{cartService: cartService}
 }
 
-// ShowCartPage menampilkan halaman Keranjang Belanja HTML
 func (h *CartHandler) ShowCartPage(c *gin.Context) {
 	userID, _ := c.Get("userID")
 	cartItems, err := h.cartService.GetCart(userID.(uint))
@@ -24,13 +24,12 @@ func (h *CartHandler) ShowCartPage(c *gin.Context) {
 		return
 	}
 
-	c.HTML(http.StatusOK, "cart.html", gin.H{
-		"title": "Maison | Your Shopping Bag",
-		"items": cartItems,
-	})
+	navData := middleware.GetNavbarData(c)
+	navData["title"] = "Maison | Your Shopping Bag"
+	navData["items"] = cartItems
+	c.HTML(http.StatusOK, "cart.html", navData)
 }
 
-// GetCartAPI melayani data keranjang belanja format JSON
 func (h *CartHandler) GetCartAPI(c *gin.Context) {
 	userID, _ := c.Get("userID")
 	cartItems, err := h.cartService.GetCart(userID.(uint))
@@ -41,7 +40,6 @@ func (h *CartHandler) GetCartAPI(c *gin.Context) {
 	utils.JSONResponse(c, http.StatusOK, "success", "Daftar keranjang berhasil diambil", cartItems)
 }
 
-// AddToCartAPI memproses penambahan produk baru ke keranjang
 func (h *CartHandler) AddToCartAPI(c *gin.Context) {
 	userID, _ := c.Get("userID")
 	var req struct {
@@ -63,7 +61,6 @@ func (h *CartHandler) AddToCartAPI(c *gin.Context) {
 	utils.JSONResponse(c, http.StatusOK, "success", "Produk berhasil ditambahkan ke tas belanja Anda", nil)
 }
 
-// UpdateCartAPI memperbarui jumlah pakaian di keranjang belanja
 func (h *CartHandler) UpdateCartAPI(c *gin.Context) {
 	userID, _ := c.Get("userID")
 	var req struct {
@@ -85,7 +82,6 @@ func (h *CartHandler) UpdateCartAPI(c *gin.Context) {
 	utils.JSONResponse(c, http.StatusOK, "success", "Jumlah pakaian di tas belanja berhasil diperbarui", nil)
 }
 
-// RemoveFromCartAPI menghapus item pakaian sepenuhnya dari keranjang
 func (h *CartHandler) RemoveFromCartAPI(c *gin.Context) {
 	userID, _ := c.Get("userID")
 	var req struct {

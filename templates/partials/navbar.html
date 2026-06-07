@@ -15,9 +15,17 @@
 
         <!-- Navigasi Menu Kanan -->
         <div class="flex items-center space-x-6 text-[10px] uppercase tracking-[0.15em] font-medium">
-            <a href="/cart" class="hover:text-gray-500 transition-colors">Tas Belanja</a>
-            <a href="/orders" class="hover:text-gray-500 transition-colors">Pesanan</a>
-            <a href="/logout" class="text-red-700 hover:text-red-500 transition-colors">Keluar</a>
+            {{ if .isLoggedIn }}
+                {{ if .isAdmin }}
+                <a href="/admin/dashboard" class="hover:text-gray-500 transition-colors">Dashboard</a>
+                {{ end }}
+                <a href="/cart" class="hover:text-gray-500 transition-colors">Tas Belanja</a>
+                <a href="/orders" class="hover:text-gray-500 transition-colors">Pesanan</a>
+                <a href="/logout" class="text-red-700 hover:text-red-500 transition-colors">Keluar</a>
+            {{ else }}
+                <a href="/login" class="hover:text-gray-500 transition-colors">Masuk</a>
+                <a href="/register" class="bg-[#1C1C1C] text-white px-4 py-2 hover:bg-gray-800 transition-colors">Daftar</a>
+            {{ end }}
         </div>
     </div>
 </header>

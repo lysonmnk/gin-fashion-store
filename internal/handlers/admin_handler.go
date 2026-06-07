@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	"fashion-store/internal/middleware"
 	"fashion-store/internal/services"
 	"fashion-store/utils"
 	"github.com/gin-gonic/gin"
@@ -17,9 +18,8 @@ func NewAdminHandler(productService services.ProductService, orderService servic
 	return &AdminHandler{productService: productService, orderService: orderService}
 }
 
-// ShowDashboard menyajikan data rekapitulasi penjualan admin HTML
 func (h *AdminHandler) ShowDashboard(c *gin.Context) {
-	products, _ := h.productService.GetAllProducts()
+	products, _ := h.productService.GetAllProducts("")
 	orders, _ := h.orderService.GetAllOrders()
 
 	var totalRevenue float64
@@ -29,37 +29,34 @@ func (h *AdminHandler) ShowDashboard(c *gin.Context) {
 		}
 	}
 
-	c.HTML(http.StatusOK, "dashboard.html", gin.H{
-		"title":        "Maison Admin | Dashboard",
-		"productCount": len(products),
-		"orderCount":   len(orders),
-		"revenue":      totalRevenue,
-	})
+	navData := middleware.GetNavbarData(c)
+	navData["title"] = "Maison Admin | Dashboard"
+	navData["productCount"] = len(products)
+	navData["orderCount"] = len(orders)
+	navData["revenue"] = totalRevenue
+	c.HTML(http.StatusOK, "dashboard.html", navData)
 }
 
-// ShowProductsManagement menampilkan menu kontrol produk HTML
 func (h *AdminHandler) ShowProductsManagement(c *gin.Context) {
-	products, _ := h.productService.GetAllProducts()
+	products, _ := h.productService.GetAllProducts("")
 	categories, _ := h.productService.GetAllCategories()
 
-	c.HTML(http.StatusOK, "products.html", gin.H{
-		"title":      "Maison Admin | Product Management",
-		"products":   products,
-		"categories": categories,
-	})
+	navData := middleware.GetNavbarData(c)
+	navData["title"] = "Maison Admin | Product Management"
+	navData["products"] = products
+	navData["categories"] = categories
+	c.HTML(http.StatusOK, "products.html", navData)
 }
 
-// ShowOrdersManagement menampilkan menu pelacakan transaksi pengguna HTML
 func (h *AdminHandler) ShowOrdersManagement(c *gin.Context) {
 	orders, _ := h.orderService.GetAllOrders()
 
-	c.HTML(http.StatusOK, "orders.html", gin.H{
-		"title":  "Maison Admin | Order List",
-		"orders": orders,
-	})
+	navData := middleware.GetNavbarData(c)
+	navData["title"] = "Maison Admin | Order List"
+	navData["orders"] = orders
+	c.HTML(http.StatusOK, "orders.html", navData)
 }
 
-// UpdateOrderStatusAPI memperbarui status pengiriman/pembayaran pesanan (API)
 func (h *AdminHandler) UpdateOrderStatusAPI(c *gin.Context) {
 	orderIDStr := c.Param("id")
 	orderID, err := strconv.ParseUint(orderIDStr, 10, 32)
