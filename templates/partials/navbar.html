@@ -1,32 +1,213 @@
 {{ define "navbar" }}
-<header class="border-b border-[#E5E0D8] bg-[#FAF9F6]/95 backdrop-blur-md sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
-        <!-- Logo Butik -->
-        <a href="/" class="text-2xl font-serif-luxury tracking-[0.25em] uppercase hover:opacity-80 transition-opacity">
-            Maison
+<!-- ============================================
+     NAVBAR — SidoliParkoding Store
+     ============================================ -->
+<nav class="navbar" id="navbar">
+  <div class="navbar-container">
+
+    <!-- Brand -->
+    <a href="/" class="navbar-brand">
+      SIDOLI<span>PARKODING</span>
+    </a>
+
+    <!-- Nav Links (desktop) -->
+    <ul class="navbar-nav">
+      <li><a href="/" class="active">Home</a></li>
+      <li><a href="/catalog">Koleksi</a></li>
+      <li><a href="/catalog?brand=nike">Nike</a></li>
+      <li><a href="/catalog?brand=adidas">Adidas</a></li>
+      <li><a href="/catalog?sale=true">Sale</a></li>
+    </ul>
+
+    <!-- Icons (desktop) -->
+    <div class="navbar-icons">
+
+      <!-- Search -->
+      <button class="icon-btn" id="searchToggle" title="Cari">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+
+      {{ if .isLoggedIn }}
+
+        {{ if .isAdmin }}
+        <!-- Admin dashboard -->
+        <a href="/admin/dashboard" class="icon-btn" title="Dashboard Admin">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        </a>
+        {{ end }}
+
+        <!-- Orders -->
+        <a href="/orders" class="icon-btn" title="Pesanan Saya">
+          <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="12" y2="16"/></svg>
         </a>
 
-        <!-- Navigasi Menu Tengah -->
-        <nav class="hidden md:flex space-x-10 text-[10px] uppercase tracking-[0.2em] font-medium text-gray-600">
-            <a href="/" class="hover:text-black transition-colors">Koleksi</a>
-            <a href="/#catalog" class="hover:text-black transition-colors">Belanja</a>
-            <a href="#" class="hover:text-black transition-colors">Filosofi</a>
-        </nav>
+        <!-- Cart -->
+        <a href="/cart" class="icon-btn" title="Keranjang">
+          <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+          {{ if .cartCount }}
+          <span class="badge">{{ .cartCount }}</span>
+          {{ end }}
+        </a>
 
-        <!-- Navigasi Menu Kanan -->
-        <div class="flex items-center space-x-6 text-[10px] uppercase tracking-[0.15em] font-medium">
-            {{ if .isLoggedIn }}
-                {{ if .isAdmin }}
-                <a href="/admin/dashboard" class="hover:text-gray-500 transition-colors">Dashboard</a>
-                {{ end }}
-                <a href="/cart" class="hover:text-gray-500 transition-colors">Tas Belanja</a>
-                <a href="/orders" class="hover:text-gray-500 transition-colors">Pesanan</a>
-                <a href="/logout" class="text-red-700 hover:text-red-500 transition-colors">Keluar</a>
-            {{ else }}
-                <a href="/login" class="hover:text-gray-500 transition-colors">Masuk</a>
-                <a href="/register" class="bg-[#1C1C1C] text-white px-4 py-2 hover:bg-gray-800 transition-colors">Daftar</a>
-            {{ end }}
-        </div>
+        <!-- Logout -->
+        <a href="/logout" class="icon-btn" title="Keluar" style="color: rgba(255,77,0,0.75);">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </a>
+
+      {{ else }}
+
+        <!-- Cart (guest) -->
+        <a href="/cart" class="icon-btn" title="Keranjang">
+          <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        </a>
+
+        <!-- Login -->
+        <a href="/login" class="btn btn-sm btn-outline-white" style="margin-left: 8px;">Masuk</a>
+
+        <!-- Register -->
+        <a href="/register" class="btn btn-sm btn-primary" style="margin-left: 4px;">Daftar</a>
+
+      {{ end }}
+
+      <!-- Mobile menu toggle -->
+      <button class="mobile-menu-btn" id="mobileMenuBtn" title="Menu">
+        <svg id="menuIcon" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+
     </div>
-</header>
+  </div>
+
+  <!-- Mobile nav -->
+  <div class="mobile-nav" id="mobileNav">
+    <a href="/">Home</a>
+    <a href="/catalog">Koleksi</a>
+    <a href="/catalog?brand=nike">Nike</a>
+    <a href="/catalog?brand=adidas">Adidas</a>
+    <a href="/catalog?sale=true">Sale</a>
+    {{ if .isLoggedIn }}
+      <a href="/orders">Pesanan Saya</a>
+      <a href="/cart">Keranjang</a>
+      {{ if .isAdmin }}<a href="/admin/dashboard">Admin Dashboard</a>{{ end }}
+      <a href="/logout" style="color: rgba(255,77,0,0.8);">Keluar</a>
+    {{ else }}
+      <a href="/login">Masuk</a>
+      <a href="/register" style="color: var(--accent);">Daftar Sekarang</a>
+    {{ end }}
+  </div>
+</nav>
+
+<!-- Search Bar Overlay -->
+<div class="search-bar" id="searchBar">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--gray-300)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  <input type="text" placeholder="Cari sepatu, brand, model..." id="searchInput" autocomplete="off"/>
+  <button class="search-close" id="searchClose">✕</button>
+</div>
+
+<!-- Navbar JS -->
+<script>
+(function () {
+  const navbar      = document.getElementById('navbar');
+  const mobileBtn   = document.getElementById('mobileMenuBtn');
+  const mobileNav   = document.getElementById('mobileNav');
+  const searchToggle = document.getElementById('searchToggle');
+  const searchBar   = document.getElementById('searchBar');
+  const searchClose = document.getElementById('searchClose');
+  const searchInput = document.getElementById('searchInput');
+
+  /* Scroll — add .scrolled class */
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 40);
+  }, { passive: true });
+
+  /* Mobile menu toggle */
+  mobileBtn.addEventListener('click', () => {
+    mobileNav.classList.toggle('open');
+  });
+
+  /* Search toggle */
+  searchToggle.addEventListener('click', () => {
+    searchBar.classList.add('active');
+    searchInput.focus();
+  });
+
+  searchClose.addEventListener('click', () => {
+    searchBar.classList.remove('active');
+    searchInput.value = '';
+  });
+
+  /* Close search on Escape */
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      searchBar.classList.remove('active');
+      mobileNav.classList.remove('open');
+    }
+  });
+
+  /* Active link highlight */
+  const links = document.querySelectorAll('.navbar-nav a');
+  links.forEach(link => {
+    if (link.href === window.location.href) {
+      links.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+})();
+</script>
+
+<!-- Search Bar CSS (scoped here) -->
+<style>
+.search-bar {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--navbar-h);
+  background: var(--primary-light);
+  z-index: calc(var(--z-sticky) + 5);
+  padding: 0 var(--container-pad);
+  border-bottom: 2px solid var(--accent);
+  align-items: center;
+  gap: var(--space-4);
+  animation: fadeInUp 0.2s ease-out;
+}
+
+.search-bar.active { display: flex; }
+
+.search-bar input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--white);
+  outline: none;
+}
+
+.search-bar input::placeholder { color: rgba(255,255,255,0.25); }
+
+.search-close {
+  background: rgba(255,255,255,0.08);
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  color: rgba(255,255,255,0.6);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--ease-fast);
+}
+
+.search-close:hover {
+  background: var(--accent);
+  color: var(--primary);
+}
+</style>
+
 {{ end }}
